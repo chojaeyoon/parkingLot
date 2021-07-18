@@ -133,6 +133,11 @@ _forC2152, prep_test = nanprocess_v1(test)
 # 강원도 임대가치 평균으로 C2152 결측치 처리
 _forC2152['임대가치'] = np.mean(prep_test[prep_test['지역']=='강원도']['임대가치'])
 prep_test = pd.concat([prep_test, _forC2152[_forC2152['단지코드'] == 'C2152']])
+
+# 테스트 결측데이터 처리
+prep_test.loc[400, '자격유형'] = 'A'
+prep_test.loc[599, '자격유형'] = 'C'
+
 prep = pd.concat([prep_train, prep_test])
 
 
@@ -208,6 +213,8 @@ def preprocess_v1(prep, type='train'):
         final_vector['주차면수'] = [usedat['단지내주차면수'].iloc[0]]
         if type == 'train':
             final_vector['등록차량수'] = [usedat['등록차량수'].iloc[0]]
+        
+        del final_vector['공공분양']
         
         merge_set.append(pd.DataFrame(final_vector))
     
