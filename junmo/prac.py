@@ -145,17 +145,24 @@ def preprocess_v1(prep, type='train'):
     # 지역
     local_map = {}
     for i, loc in enumerate(prep['지역'].unique()):
-        local_map[loc] = i
+        _arr = [0] * len(prep['지역'].unique())
+        _arr[i] = 1
+        local_map[loc] = _arr
 
     # 공급유형
     supply_map = {}
     for i, loc in enumerate(prep['공급유형'].unique()):
-        supply_map[loc] = i
+        _arr = [0] * len(prep['공급유형'].unique())
+        _arr[i] = 1
+        supply_map[loc] = _arr
 
     # 자격유형
     qual_map = {}
     for i, loc in enumerate(prep['자격유형'].unique()):
-        qual_map[loc] = i
+        _arr = [0] * len(prep['자격유형'].unique())
+        _arr[i] = 1
+        qual_map[loc] = _arr
+        
     
     aparts = list(set(prep['단지코드']))
     merge_set = []
@@ -163,6 +170,8 @@ def preprocess_v1(prep, type='train'):
         final_vector = {}
 
         usedat = prep[prep['단지코드'] == code]
+        onlyapart = usedat[usedat['임대건물구분'] == '아파트']
+        
         if '상가' in set(usedat['임대건물구분']):
             sanga = 1
             sangadat = usedat[usedat['임대건물구분'] == '상가']
@@ -173,15 +182,26 @@ def preprocess_v1(prep, type='train'):
             sanga = 0
             sanga_area = 0.0
             apart_area = sum(usedat['전용면적'] * usedat['전용면적별세대수'])
-
+        
+        final_vector['단지코드'] = [usedat['단지코드'].iloc[0]]
         final_vector['총세대수'] = [usedat['총세대수'].iloc[0]]
         final_vector['상가'] = [sanga]
         final_vector['아파트면적'] = [apart_area]
         final_vector['상가면적'] = [sanga_area]
-        final_vector['지역'] = [local_map[usedat['지역'].iloc[0]]]
-        final_vector['공급유형'] = [supply_map[max(set(list(usedat['공급유형'])), key = list(usedat['공급유형']).count)]]
-        final_vector['공가수'] = [usedat['공가수'].iloc[0]]
-        final_vector['자격유형'] = [qual_map[max(set(list(usedat['자격유형'])), key = list(usedat['자격유형']).count)]]
+        
+        _onehot = sum([np.array(local_map[key]) for key in usedat['지역'].unique()])    # 지역정보
+        for tp in zip(list(local_map.keys()), list(_onehot)):
+            final_vector[tp[0]] = tp[1]
+            
+        _onehot = sum([np.array(supply_map[key]) * usedat.iloc[idx]['전용면적별세대수'] for idx, key in enumerate(usedat['공급유형'])])    # 공급유형
+        for tp in zip(supply_map.keys(), _onehot):
+            final_vector[tp[0]] = tp[1]
+            
+        _onehot = sum([np.array(qual_map[key]) * usedat.iloc[idx]['전용면적별세대수'] for idx, key in enumerate(usedat['자격유형'])])    # 자격유형
+        for tp in zip(qual_map.keys(), _onehot):
+            final_vector[tp[0]] = tp[1]     
+
+        final_vector['공가수'] = [usedat['공가수'].iloc[0]]            
         final_vector['임대가치'] = [usedat['임대가치'].iloc[0]]
         final_vector['지하철'] = [usedat['도보 10분거리 내 지하철역 수(환승노선 수 반영)'].iloc[0]]
         final_vector['버스'] = [usedat['도보 10분거리 내 버스정류장 수'].iloc[0]]
