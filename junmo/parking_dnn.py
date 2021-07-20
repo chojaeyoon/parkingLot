@@ -244,7 +244,7 @@ def trainsave(vars):
     cvloss = np.mean([i.cpu().item() for i in bs_box])
     MAE = np.mean(mae_box)
     print(f'ckpt path: {saved_dir}\nBest CV_Loss: {r3(cvloss)}\nBest MAE: {r3(MAE)}')
-    f = open(f'vars/ckpt_batch_{batch_size}_lr_{learning_rate}_structure_{structure_string} CV_Loss {r3(cvloss)} MAE {r3(MAE)}.txt', 'w')
+    f = open(f'vars/ckpt_batch_{batch_size}_lr_{learning_rate}_structure_{structure_string} MSE {r3(cvloss)} RSQ {r3(MAE)}.txt', 'w')
     
     for i in mae_box:
         data = str(i) + "\n"
@@ -256,10 +256,10 @@ def trainsave(vars):
 b = [2**i for i in range(2, 6)] # batch_size
 l = [0.0003, 0.001, 0.003, 0.01] # learning_rate
 s = [
-    [200, 200, 200],
-    [300, 300, 300],
-    [200, 200, 200, 200, 200],
-    [300, 300, 300, 300, 300]
+    [400] * 6,
+    [400] * 7,
+    [400] * 8,
+    [400] * 9,
 ] # structure
 
 vars = list(itertools.product(b, l, s))
